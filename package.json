@@ -1,0 +1,28 @@
+{
+  "name": "helloworld",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "cross-env DID_ON='true' nodemon index.js",
+    "dev-resolver": "cross-env RESOLVER='true' DID_ON='true' nodemon index.js",
+    "dev-peer": "cross-env CLIENT='true' DID_ON='true' nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cross-env": "^7.0.2",
+    "crypto": "^1.0.1",
+    "elliptic": "^6.5.2",
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.0",
+    "nodemon": "^2.0.3",
+    "request": "^2.88.2"
+  }
+}
