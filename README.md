@@ -9,23 +9,26 @@ PasswordlessAuthentication
 |-- README.md
 |-- config.js
 |-- contracts
-|   |-- Login.sol
-|   `-- Migrations.sol
+|   |-- Login.sol
+|   `-- Migrations.sol
 |-- did
-|   |-- did_resolver.js
-|   |-- index.js
-|   |-- registry.js
-|   `-- test_resolver.js
+|   |-- did_resolver.js
+|   |-- index.js
+|   |-- registry.js
+|   `-- test_resolver.js
 |-- index.js
 |-- migrations
-|   |-- 1_initial_migration.js
-|   `-- 2_deploy_contracts.js
+|   |-- 1_initial_migration.js
+|   `-- 2_deploy_contracts.js
 |-- package.json
 |-- truffle-config.js
+|-- util
+|   `-- index.js
 `-- wallet
-    `-- index.js
+    `-- index.js
 
-4 directories, 14 files
+5 directories, 15 files
+
 ```
 
 ### Let's begin with getting around the code
