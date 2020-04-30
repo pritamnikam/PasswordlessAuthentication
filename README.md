@@ -1,6 +1,9 @@
-# PasswordlessAuthentication
-A simulation for passwordless authentication for DID and Blockchain ECC.
+# Passwordless Authentication using Decentralized Indentifiers (DID).
+A simulation for password-less authentication using Decentralized Indentifiers (DID) and Blockchain Elliptical Curve Cryptography (ECC).
 
+### Outline for the experiment
+
+```bash
 $ tree PasswordlessAuthentication
 PasswordlessAuthentication
 |-- README.md
@@ -23,21 +26,31 @@ PasswordlessAuthentication
     `-- index.js
 
 4 directories, 14 files
+```
 
+### Let's begin with getting around the code
+
+```bash
 $ cd PasswordlessAuthentication
-
 $ npm install
+```
 
-[3 different bash terminals]
+Open 3 different bash terminals to run DID resolver, a Server and a Client application.
 
 Run the DID resolver (localhost:2999)
+```bash
 $ npm run dev-resolver
+```
 
 Run Server (localhost:3000)
+```bash
 $ npm run dev
+```
 
 Run Client (localhost:3000 + random number)
+```bash
 $ npm run dev-peer
+```
 
 Please note:
 1. Both server and Client will register their public-key with resolved to get a DID, so make sure you start resolver first.
@@ -49,9 +62,11 @@ Communication Handshake.
 1. Resolver has started.
 2. Server has started. It creates a wallet with pair of ECC keys and registers the public-key to get a DID with resolver ('/api/did/register').
 3. Client has started. It creates a wallet with pair of ECC keys and registers public key to get a DID with resolver ('/api/did/register').
-4. Client sends '/api/login' request to Server to initiate authentication.
-5. Server sends a JSON with Signed Challenge, DID and Plain challenge to Client.
-6. Client fetches the DID-Document corresponding to the Server's DID received in login challenge from DID-Resolver ('/api/did/fetch'), and verifies the signature based on the public-key.
-7. If signature matches, sends a '/api/verify' request along with JSON with Signed Challenge, DID and Plain-text challenge received from Server.
-8. Server fetches the DID-Document corresponding to the Client's DID received in login challenge from DID-Resolver ('/api/did/fetch'), and verifies the signature based on the public-key.
-9. If signature matches sends a JWT auth token, and Client gets authenticated to the system.
+4. Cleint requests a '/api/hello' along with auth token (if available).
+5. Server reads the HTTP request header and validate the auth token. If token is valid, send success response, otherwise error code 401, as unauthorized.
+6. Client sends '/api/login' request to Server to initiate authentication.
+7. Server sends a JSON with Signed Challenge, DID and plain-text challenge string to the Client.
+8. Client fetches the DID-Document corresponding to the Server's DID received in login challenge from DID-Resolver ('/api/did/fetch'), and verifies the signature based on the public-key proof.
+9. If signature matches, sends a '/api/verify' request along with JSON with Signed Challenge, DID and plain-text challenge string received from the Server.
+10. Server fetches the DID-Document corresponding to the Client's DID received in login challenge from DID-Resolver ('/api/did/fetch'), and verifies the signature based on the public-key proof.
+11. If signature matches sends a JWT auth token, and Client gets authenticated to the system.

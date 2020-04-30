@@ -6,14 +6,31 @@ const Wallet = require('./wallet');
 const { register, read } = require('./did');
 
 const { DEFAULT_PORT, ROOT_NODE_ADDRESS, RESOLVER_PORT } = require('./config');
+const { getTokenFromHeader, getAuthJSON } = require('./util');
 
 let wallet;
 const app = express();
 app.use(bodyParser.json());
 
 // ------ Routes on DEFAULT ports (server) ------ //
+app.get('/api/hello', (req, res) => {
+  console.log('#2. Server reads the HTTP request header to validate the Auth Token.');
+  const token = getTokenFromHeader(req);
+  if (token != undefined || token != null) {
+    res.json({
+      status: 200,
+      message: 'Success'
+    });
+  } else {
+    res.json({
+      status: 401,
+      message: "Unauthorized"
+    });
+  }
+});
+
 app.get('/api/login', (req, res) => {
-  console.log('#2. Server Signs a Login Challenge and Sends To Client.');
+  console.log('#4. Server Signs a Login Challenge and Sends it along with DID To the Client.');
   const challenge = {
     msg: 'hello'
   };
@@ -29,16 +46,29 @@ app.get('/api/login', (req, res) => {
 });
 
 app.post('/api/verify', (req, res) => {
-  console.log('#4. Server verifies the Client Signature and Lgoins in Client.')
+  console.log('#6. Server verifies the Clients Signature and sends a JWT auth token to Client.')
   Wallet.verifyAsync({
     did: req.body.sender,
     data: req.body.msg,
     signature: req.body.sig
   }).then((matched) => {
-    // TODO(pritam.nikam): Sends a login token
-    res.json({msg: matched});
+    if (matched) {
+      res.json({
+        status: 200,
+        message: 'Success',
+        auth: getAuthJSON()
+      });
+    } else {
+      res.json({
+        status: 401,
+        message: "Unauthorized"
+      });
+    }
   }, ((err) => {
-    console.error('err: ', err);
+    res.json({
+      status: 401,
+      message: "Unauthorized"
+    });
   }));
 });
 
@@ -60,8 +90,28 @@ app.post('/api/did/fetch', (req, res) => {
 
 // ------ Helper APIs mainly on client ------ //
 
+let authToken;
+
+const Hello = async ()  => {
+  console.log('#1. Client Requests Hello.');
+  const authorizationString = (authToken === undefined) ? '' : `Token ${authToken}`;
+  const resp = await fetch(`${ROOT_NODE_ADDRESS}/api/hello`, {
+    method: 'GET',
+    headers: {
+      authorization: authorizationString
+    }
+  });
+
+  let results = await resp.json();
+  if (results.status !== 200) {
+    Login();
+  } else {
+    console.log("#3a. Client successuly sign-in to server with auth token.");
+  }
+}
+
 const Login = async () => {
-  console.log('#1. Client Requests Login.');
+  console.log('#3b. Client Requests Login.');
 
   const resp = await fetch(`${ROOT_NODE_ADDRESS}/api/login`);
   let results = await resp.json();
@@ -72,11 +122,13 @@ const Login = async () => {
                     });
   if (match) {
     Verify(results);
+  } else {
+    console.log("#5b. Login challenge signature failed.");
   }
 }
 
 const Verify = async (parsedBody) => {
-    console.log('#3. Client Verifies the Server Signature and Sends Signed Challenge to Server.');
+    console.log('#5a. Client Verifies the Server Signature and Sends Signed Challenge along with the DID to the Server.');
     // Request a session token
     // a. Sign the message with private-key.
     // b. Send public-key along with original message and sign message.
@@ -95,7 +147,17 @@ const Verify = async (parsedBody) => {
     });
 
     let results = await resp.json();
-    console.log('#5. Client receives the JWT as login token', results);
+    if (results.status === 200) {
+      console.log('#7a. Client receives the JWT as login token.');
+      
+      authToken = results.auth.token;
+      setTimeout(() => {
+                          Hello();
+                        }, 2000);
+
+    } else {
+      console.log('#7b. Client failed to sign-in to the Server.');
+    }
 };
 
 // -------------- Common Code ------------------ //
@@ -119,6 +181,6 @@ app.listen(PORT, () => {
 
     // Client initiates Login flow.
     if (PORT !== DEFAULT_PORT && PORT !== RESOLVER_PORT) {
-        setTimeout(() => { Login(); }, 2000);
+        setTimeout(() => { Hello(); }, 2000);
     }
 });

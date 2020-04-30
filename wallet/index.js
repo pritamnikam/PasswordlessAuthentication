@@ -29,7 +29,7 @@ class Wallet {
     }
 
     async requestRegistration() {
-        console.log('#0 Register for DID');
+        console.log('#0. Register for DID.');
 
         const postData = {
             publicKey: this.publicKey,
