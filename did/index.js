@@ -6,8 +6,8 @@ const registry = new DIDRegistry();
 const test_resolver = new TestResolver();
 const resolver = new Resolver({ 'test': test_resolver });
 
-function register( { publicKey, type, key } ) {
-    const did = registry.Add({
+register = async ({ publicKey, type, key }) => {
+    const did = await registry.Add({
         publicKey: publicKey,
         type: type,
         key: key
@@ -16,12 +16,13 @@ function register( { publicKey, type, key } ) {
     return did;
 }
 
-function read(did) {
-    return registry.Read(did);
+read = async (did) => {
+    const document = await registry.Read(did);
+    return document;
 }
 
 async function resolve({ didURL }) {
-    let result = await resolver.resolve(didURL);
+    const result = await resolver.resolve(didURL);
     return result;
 }
 

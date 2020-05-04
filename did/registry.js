@@ -1,4 +1,7 @@
-var crypto = require('crypto');
+const crypto = require('crypto');
+
+const IPFSClient = require('../app/ipfs_client');
+
 
 // @singleton
 class DIDRegistry {
@@ -8,11 +11,12 @@ class DIDRegistry {
             return instance;
         }
 
+        this.ipfs = new IPFSClient();
         this.registry = {};
         this.constructor.instance = this;
     }
 
-    Add({ publicKey, type, key }) {
+    Add = async ({ publicKey, type, key }) => {
         console.log('#1 Resolver: DID Subject registers for the DID.');
 
         var md5 = crypto.createHash('md5')
@@ -40,13 +44,20 @@ class DIDRegistry {
             ],
         };
 
-        this.registry[did] = JSON.stringify(body);
-        return did;
+        const file = await this.ipfs.sendFile({ content: JSON.stringify(body) });
+        this.registry[did] = file;
+
+        return  ({
+            did: did,
+            content: file
+        });
     }
 
-    Read(did) {
+    Read = async ({ did }) => {
         console.log(`#2 Resolver: fetches the DID Document for ${did}.`);
-        return this.registry[did];
+        const content = this.registry[did];
+        const file = await this.ipfs.fetchFile( content );
+        return file;  // do-not-parse-to-json
     }
 }
 

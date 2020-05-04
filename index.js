@@ -7,6 +7,8 @@ const { register, read } = require('./did');
 
 const { DEFAULT_PORT, ROOT_NODE_ADDRESS, RESOLVER_PORT } = require('./config');
 const { getTokenFromHeader, getAuthJSON } = require('./util');
+const IPFSClient = require('./app/ipfs_client');
+
 
 let wallet;
 const app = express();
@@ -74,18 +76,14 @@ app.post('/api/verify', (req, res) => {
 
 // ------ Routes on RESOLVER ports (DID Resolver) ------ //
 
-app.post('/api/did/register', (req, res) => {
-  res.json({
-    did: register({
-      publicKey: req.body.publicKey,
-      type: req.body.type,
-      key: req.body.key
-    })
-  });
+app.post('/api/did/register', async (req, res) => {
+  const did = await register(req.body);
+  res.json(did);
 });
 
-app.post('/api/did/fetch', (req, res) => {
-  res.json(read(req.body.did));
+app.post('/api/did/fetch', async (req, res) => {
+  const document = await read(req.body);
+  res.json(document);
 });
 
 // ------ Helper APIs mainly on client ------ //
@@ -159,6 +157,24 @@ const Verify = async (parsedBody) => {
       console.log('#7b. Client failed to sign-in to the Server.');
     }
 };
+
+// --------------- Test routes for IPFS --------- //
+
+app.post('/api/ipfs-upload', async (req, res) => {
+  console.log(req.body);
+
+  const ipfs = new IPFSClient();
+  const address = await ipfs.sendFile(req.body);
+  res.json(address);
+});
+
+app.get('/api/ipfs-fetch/:hash', async (req, res) => {
+  console.log(req.params.hash);
+
+  const ipfs = new IPFSClient();
+  const file = await ipfs.fetchFile({ fileHash: req.params.hash });
+  res.json(file);
+});
 
 // -------------- Common Code ------------------ //
 

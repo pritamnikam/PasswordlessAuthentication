@@ -1,12 +1,15 @@
 # Passwordless Authentication using Decentralized Indentifiers (DID).
 A simulation for password-less authentication using Decentralized Indentifiers (DID) and Blockchain Elliptical Curve Cryptography (ECC).
 
+
 ### Outline for the experiment
 
 ```bash
 $ tree PasswordlessAuthentication
 PasswordlessAuthentication
 |-- README.md
+|-- app
+|   `-- ipfs_client.js
 |-- config.js
 |-- contracts
 |   |-- Login.sol
@@ -21,17 +24,77 @@ PasswordlessAuthentication
 |   |-- 1_initial_migration.js
 |   `-- 2_deploy_contracts.js
 |-- package.json
+|-- test
 |-- truffle-config.js
 |-- util
 |   `-- index.js
 `-- wallet
     `-- index.js
 
-5 directories, 15 files
+7 directories, 16 files
 
 ```
 
 ### Let's begin with getting around the code
+
+#### Running IPFS as DLT
+1. Install IPFS from below website.
+
+```
+https://docs.ipfs.io/guides/guides/install/#installing-from-a-prebuilt-package
+```
+
+2. Run the IPFS initialization (first time)
+
+```bash
+$ cd go-ipfs
+$ ipfs init
+
+initializing IPFS node at C:\Users\prita\.ipfs
+generating 2048-bit RSA keypair...done
+peer identity: QmPCofsW6CcYegvrcz3zMfqesJC4xJnVMj8TBim6RHWbxS
+to get started, enter:
+
+        ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
+```
+
+3. Start the daemon service.
+
+```bash
+$ ipfs daemon
+
+Initializing daemon...
+go-ipfs version: 0.5.0
+Repo version: 9
+System version: amd64/windows
+Golang version: go1.13.10
+Swarm listening on /ip4/127.0.0.1/tcp/4001
+Swarm listening on /ip4/169.254.183.85/tcp/4001
+Swarm listening on /ip4/192.168.29.45/tcp/4001
+Swarm listening on /ip6/2405:201:d800:c754:5895:f2cf:4cfd:be83/tcp/4001
+Swarm listening on /ip6/2405:201:d800:c754:c6d:2978:f9d8:8851/tcp/4001
+Swarm listening on /ip6/::1/tcp/4001
+Swarm listening on /p2p-circuit
+Swarm announcing /ip4/127.0.0.1/tcp/4001
+Swarm announcing /ip4/169.254.183.85/tcp/4001
+Swarm announcing /ip4/192.168.29.45/tcp/4001
+Swarm announcing /ip6/2405:201:d800:c754:5895:f2cf:4cfd:be83/tcp/4001
+Swarm announcing /ip6/2405:201:d800:c754:c6d:2978:f9d8:8851/tcp/4001
+Swarm announcing /ip6/::1/tcp/4001
+API server listening on /ip4/127.0.0.1/tcp/5001
+WebUI: http://127.0.0.1:5001/webui
+Gateway (readonly) server listening on /ip4/127.0.0.1/tcp/8080
+Daemon is ready
+
+```
+
+4. [Optinal] We can open WebUI interface in web browser
+
+```
+http://127.0.0.1:5001/webui
+```
+
+#### Installing node dependencies
 
 ```bash
 $ cd PasswordlessAuthentication
