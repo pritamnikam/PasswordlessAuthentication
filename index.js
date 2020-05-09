@@ -2,6 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fetch = require('node-fetch');
 
+const app = express();
+
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const crypto  = require('crypto');
+const QRCode = require('qr-image');
+const template = require("swig");
+
 const Wallet = require('./wallet');
 const { register, read } = require('./did');
 
@@ -9,9 +17,10 @@ const { DEFAULT_PORT, ROOT_NODE_ADDRESS, RESOLVER_PORT } = require('./config');
 const { getTokenFromHeader, getAuthJSON } = require('./util');
 const IPFSClient = require('./app/ipfs_client');
 
+const isQRCodeEnabled = process.env.QR_ON;
 
 let wallet;
-const app = express();
+
 app.use(bodyParser.json());
 
 // ------ Routes on DEFAULT ports (server) ------ //
@@ -158,6 +167,94 @@ const Verify = async (parsedBody) => {
     }
 };
 
+// -------------- QR Code ----------------------- //
+const PSK_LENGTH = 10;
+
+app.get('/api/qr/signin', (req, res) => {
+  if (!isQRCodeEnabled)
+    res.status(404).send('Sorry, we cannot find that!');
+
+	var randomid = crypto.randomBytes(PSK_LENGTH).toString("hex");
+	console.log("[GET /] Generating PSK: " + randomid + "." );
+	let render = template.renderFile(__dirname + "/client/index.html.j2", {
+		id: randomid
+	});
+	res.send(render);
+});
+
+app.get('/api/qr/authentication.svg/:id', (req, res) => {
+  if (!isQRCodeEnabled)
+    res.status(404).send('Sorry, we cannot find that!');
+
+	var id = req.params.id;
+	if(id) {
+		var qr = QRCode.image(`${ROOT_NODE_ADDRESS}/api/qr/verifysignin/:${id}`, { type: 'svg' });
+		res.type('svg');
+		qr.pipe(res);
+	} else {
+		res.status(404).send('Sorry, we cannot find that!');
+	}
+});
+
+app.get('/api/qr/verifysignin/:id', (req, res) => {
+  if (!isQRCodeEnabled)
+    res.status(404).send('Sorry, we cannot find that!');
+
+	var id = req.params.id;
+	if(id) {
+		let render = template.renderFile(__dirname + "/client/verify.html.j2", {
+			id: id
+		});
+		res.send(render);
+	} else {
+		res.status(404).send('Sorry, we cannot find that!');
+	}
+});
+
+// ------------- SOCKET APIs ---------------------
+let lightdb = {};
+
+io.on('connection', (socket) => {
+	var connRandomID;
+
+	// Browser wants to join a room
+	socket.on('id', (randomID) => {
+		connRandomID = randomID;
+		socket.join(randomID);
+	});
+
+	// New device (e.g. smartphone) Wants to check the ID
+  socket.on('authid', (id) => {
+		connRandomID = id;
+		socket.join(connRandomID);
+		socket.emit("uuidquery");
+	});
+
+	// New device sends UUID.
+	socket.on('uuidresponse', (uuid) => {
+		if(!(uuid in lightdb)){
+			io.sockets.in(connRandomID).emit("signin_bind", uuid);
+		} else{
+			io.sockets.in(connRandomID).emit("successful_login", lightdb[uuid]);
+		}
+	});
+
+	// New device sends UUID.
+	socket.on('signin', (credentials) => {
+		lightdb[credentials.uuid] = {name: credentials.name, surname: credentials.surname};
+		io.sockets.in(connRandomID).emit("successful_signin", credentials.uuid);
+	});
+
+	socket.on('disconnect', () => {
+		console.log('[DISCONNECT] client disconnected');
+	});
+
+  // For each update, tell other device.
+  socket.on('broadcast', (payload) => {
+		io.sockets.in(connRandomID).emit("update", payload);
+	});
+});
+
 // --------------- Test routes for IPFS --------- //
 
 app.post('/api/ipfs-upload', async (req, res) => {
@@ -187,7 +284,7 @@ if (process.env.CLIENT === 'true') {
 }
 
 const PORT = peer_port || DEFAULT_PORT;
-app.listen(PORT, () => {
+http.listen(PORT, () => {
     console.log(`listening on localhost:${PORT}`);
 
     // Don't create wallet for DID-Resolver.

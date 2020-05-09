@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QR-Code Sign-In</title>
+    </head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io();
+        var sessionUuid;
+
+        // Tells the server that the webpage is bound
+        socket.emit("id", "{{id}}");
+        
+        // When server tells client about sign-in form for challenge.
+        socket.on("signin_bind", (uuid) => {
+            sessionUuid = uuid;
+/*
+            document.getElementById("svgCode").innerHTML =
+                    "<p> Synced with you! No more auth needed." +
+                    "But just to prove account binding, enter the informations below: </p>" +
+                    "<form id='SignInForm'>" +
+                        "<span>Name: <input type='text' id='txtName' onchange='update(this)'> </span> <br/>" + 
+                        "<span>Surname: <input type='text' id='txtSurname' onchange='update(this)'></span><br/>" +
+                        "<button id='btnSignin' onclick='signin()'>Sign in</button>" +
+                    "</form>";
+*/
+            signin();
+        });
+
+        socket.on("successful_login", (credentials) => {
+            // document.getElementById("svgCode").innerHTML =
+            //              "<p>Hello again " + credentials.name + " " + credentials.surname + "! </p>"; 
+
+            document.getElementById("image").classList.add('image_verified');
+            document.getElementById("middle").classList.add('middle_verified');
+        });
+
+        socket.on("successful_signin", (uuid) => {
+            // document.getElementById("svgCode").innerHTML =
+            //                          "<span> successful_login </span>";
+
+            document.getElementById("image").classList.add('image_verified');
+            document.getElementById("middle").classList.add('middle_verified');
+        });
+
+        socket.on("update", (payload) => {
+            if((payload.id) && (payload.value)) {
+                document.getElementById(payload.id).value = payload.value;
+            }
+        });
+
+        const update = (element) => {
+            socket.emit("broadcast",
+                {
+                    id: element.id,
+                    value: element.value
+                });
+        }
+
+        const signin = () => {
+            var sName = 'Pritam';
+            var sSurname = 'Nikam';
+            socket.emit("signin", {
+                        uuid: sessionUuid,
+                        name: sName,
+                        surname: sSurname
+            });
+        }
+
+    </script>
+
+    <style type="text/css">
+        body {
+            background-color: lightgray;
+        }
+
+        #SignInCreds.input{
+            margin-left: auto;
+        }
+
+        #main {
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 25px;
+            background: white;
+            padding: 40px;
+            width: 30%;
+            height: 80%;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
+
+        .middle {
+            transition: .5s ease;
+            opacity: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .container {
+            position: relative;
+            width: 50%;
+        }
+
+        .text {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            padding: 16px 32px;
+        }
+
+        .image {
+            opacity: 1;
+            display: block;
+            width: 100%;
+            height: auto;
+            transition: .5s ease;
+            backface-visibility: hidden;
+        }
+
+        .image_verified {
+            opacity: 0.3;
+        }
+
+        .middle_verified {
+            opacity: 1;
+        }
+
+    </style>
+    <div id="main" align="center" class="container">
+        Signin/Login page.
+        Scan this with your Identity Wallet Application.
+        <div id="svgCode">
+            <img id="image" class="image" width="90%" src="/api/qr/authentication.svg/{{id}}" />
+        </div>
+
+        <div id="middle" class="middle">
+            <div class="text">Verified</div>
+        </div>
+    </div>
+</body>
+</html>

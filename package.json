@@ -11,6 +11,8 @@
     "dev": "cross-env DID_ON='true' nodemon index.js",
     "dev-resolver": "cross-env RESOLVER='true' DID_ON='true' nodemon index.js",
     "dev-peer": "cross-env CLIENT='true' DID_ON='true' nodemon index.js",
+    "dev-qr": "cross-env DID_ON='true' QR_ON='true' nodemon index.js",
+    "dev-peer-qr": "cross-env CLIENT='true' DID_ON='true' QR_ON='true' nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -21,10 +23,14 @@
     "crypto": "^1.0.1",
     "elliptic": "^6.5.2",
     "express": "^4.17.1",
+    "http": "0.0.1-security",
     "ipfs-http-client": "^44.0.1",
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "nodemon": "^2.0.3",
-    "request": "^2.88.2"
+    "qr-image": "^3.2.0",
+    "request": "^2.88.2",
+    "socket.io": "^2.3.0",
+    "swig": "^1.4.2"
   }
 }

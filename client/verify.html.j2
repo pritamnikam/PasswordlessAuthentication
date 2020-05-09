@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Verify Sign-In</title>
+    </head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io();
+        var sessionUuid;
+
+        socket.emit("authid", "{{id}}");
+
+        socket.on("uuidquery", () => {
+            document.getElementById("logs").innerHTML = "<span> Received uuidquery </span>";
+            socket.emit("uuidresponse", "12345");
+        });
+
+        socket.on("successful_signin", (uuid) => {
+            document.getElementById("logs").innerHTML = "<span> successful_signin </span>";
+        });
+
+        socket.on("successful_bind", () => {
+            document.getElementById("logs").innerHTML = "<span> successful_bind </span>";
+        });
+
+        socket.on("successful_login", () => {
+            document.getElementById("logs").innerHTML = "<span> successful_login </span>";
+        });
+
+        socket.on("update", (payload) => {
+            document.getElementById("logs").innerHTML = "<span> Updated </span>";
+        });
+
+    </script>
+
+    <div id="main" align="center">
+        Verification page page.
+        <div id="logs">
+        </div>
+    </div>
+</body>
+</html>

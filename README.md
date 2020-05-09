@@ -7,9 +7,13 @@ A simulation for password-less authentication using Decentralized Indentifiers (
 ```bash
 $ tree PasswordlessAuthentication
 PasswordlessAuthentication
+.
 |-- README.md
 |-- app
 |   `-- ipfs_client.js
+|-- client
+|   |-- index.html.j2
+|   `-- verify.html.j2
 |-- config.js
 |-- contracts
 |   |-- Login.sol
@@ -31,7 +35,7 @@ PasswordlessAuthentication
 `-- wallet
     `-- index.js
 
-7 directories, 16 files
+8 directories, 18 files
 
 ```
 
@@ -118,13 +122,14 @@ Run Client (localhost:3000 + random number)
 $ npm run dev-peer
 ```
 
+
 Please note:
 1. Both server and Client will register their public-key with resolved to get a DID, so make sure you start resolver first.
 2. the client will initiate login on launch so make sure all server will be created.
 3. At present, DID resolver does not talk to blockchain, however we can make it to backup data on Blockchain or IPFS.
 4. In addition, we are using ECC for login, web3 based communication we have not added as this sample app does not use Metamask wallet.
 
-Communication Handshake.
+#### Communication Handshake.
 1. Resolver has started.
 2. Server has started. It creates a wallet with pair of ECC keys and registers the public-key to get a DID with resolver ('/api/did/register').
 3. Client has started. It creates a wallet with pair of ECC keys and registers public key to get a DID with resolver ('/api/did/register').
@@ -136,3 +141,28 @@ Communication Handshake.
 9. If signature matches, sends a '/api/verify' request along with JSON with Signed Challenge, DID and plain-text challenge string received from the Server.
 10. Server fetches the DID-Document corresponding to the Client's DID received in login challenge from DID-Resolver ('/api/did/fetch'), and verifies the signature based on the public-key proof.
 11. If signature matches sends a JWT auth token, and Client gets authenticated to the system.
+
+
+#### Optionally we can use the QR codes, for sign to Web Browser running on Desktops.
+Run Server (localhost:3000)
+
+```bash
+$ npm run dev-qr
+```
+
+In web browser (UA) open 'http://localhost:3000/api/qr/signin'.
+
+On reciving, website sends a 10-digit passkey and sends a QR code to be scanned in Identity Wallet running on users Android phone. Moreover, UA joins a room over websockets for further out-of-band communication.
+
+```javascript
+const id = crypto.randomBytes(PSK_LENGTH).toString("hex");
+const qr = QRCode.image(`${ROOT_NODE_ADDRESS}/api/qr/verifysignin/:${id}`, { type: 'svg' });
+res.type('svg');
+qr.pipe(res);
+```
+
+Identity Wallet scans the QR code, and joins the room over same channel-id using websocket with the website for out-of-band communication. Starts authentication-handshake based on DID with the website.
+
+[UA] <----> [website] <----> [Identity Wallet]
+
+On successful authentication, shares the authentication session token with UA to login the user session.
